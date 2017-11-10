@@ -23,7 +23,11 @@ export default function featureReducer(state, action) {
         feature.update('properties', props => props.merge(action.feature.properties));
         action.passingProps.forEach((propName) => {
           if (typeof(feature.get(propName)) === 'object') {
-            feature.update(propName, props => props.merge(action.feature[propName]));
+            if (feature.get(propName) === null) {
+              feature.set(propName, action.feature[propName]);
+            } else {
+              feature.update(propName, props => props.merge(action.feature[propName]));
+            }
           } else {
             feature.set(propName, action.feature[propName]);
           }
