@@ -202,7 +202,11 @@ export function setFeatureParams(layerId, featureId, feature) {
         case ('undefined'):
           break;
         default:
-          Object.assign(features[featureId][passName], feature[passName]);
+          if (features[featureId][passName] === null) {
+            features[featureId][passName] = feature[passName];
+          } else {
+            Object.assign(features[featureId][passName], feature[passName]);
+          }
           break;
       }
     }
