@@ -7,6 +7,7 @@ import {
   REDUXLAYER_MOUSE_DOWN_FEATURE,
   REDUXLAYER_MOUSE_UP_FEATURE,
 } from './actionTypes';
+import { fromJS } from 'immutable';
 
 export default function featureReducer(state, action) {
   switch (action.type) {
@@ -22,15 +23,7 @@ export default function featureReducer(state, action) {
       return state.withMutations(feature => {
         feature.update('properties', props => props.merge(action.feature.properties));
         action.passingProps.forEach((propName) => {
-          if (typeof(feature.get(propName)) === 'object') {
-            if (feature.get(propName) === null) {
-              feature.set(propName, action.feature[propName]);
-            } else {
-              feature.update(propName, props => props.merge(action.feature[propName]));
-            }
-          } else {
-            feature.set(propName, action.feature[propName]);
-          }
+          feature.set(propName, fromJS(action.feature[propName]));
         });
         if (action.maskChange !== undefined) {
           feature.set('isShown', action.maskChange);
