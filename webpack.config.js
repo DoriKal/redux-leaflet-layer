@@ -14,6 +14,10 @@ module.exports = {
         loader: 'babel',
         exclude: /(node_modules)/,
       },
+      {
+        test: /.css$/,
+        loaders: ['file?name=[name].[ext]'],
+      },
     ],
   },
   resolve: {
