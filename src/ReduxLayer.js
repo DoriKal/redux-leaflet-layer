@@ -8,6 +8,7 @@ import {
   layerCreated,
   layerRemoved,
 } from './actions';
+import 'leaflet.markercluster';
 
 function defaultFilter(/* feature */) {
   return true;
@@ -64,13 +65,20 @@ function layerEventsToActions(layer, layerId, featureId) {
 export function createReduxLayer({
   layerId, dispatch, style, markerOptions, globalMarkerOptions,
   getFeatureId, onEachFeature, trackMouseEvents, passingProps,
+  clasterProps,
 }) {
   if (nss[layerId]) {
     throw new Error(`Trying to create redux layer with id=${layerId}, which already exists`);
   }
+  let leafletLayer;
+  if (clasterProps && clasterProps.isEnable) {
+    leafletLayer = L.markerClusterGroup();
+  } else {
+    leafletLayer = L.layerGroup();
+  }
 
   nss[layerId] = {
-    leafletLayer: L.layerGroup(),
+    leafletLayer,
     features: {},
     layers: {},
     filterMask: {},
@@ -87,7 +95,6 @@ export function createReduxLayer({
   };
 
   dispatch(layerCreated(layerId, { filterExpression: nss[layerId].filterExpression }));
-
   return nss[layerId];
 }
 
@@ -295,6 +302,7 @@ export function setFilter(layerId, filterExpression) {
     /* eslint-disable no-new-func */
     const filter = new Function('feature', `return ${filterExpression}`);
     nss[layerId].filter = filter;
+
     Object.keys(features).forEach(featureId => {
       const filterResult = filter(nss[layerId].features[featureId]);
       if (filterResult && features[featureId].isShown) {
@@ -311,11 +319,21 @@ export function setFilter(layerId, filterExpression) {
       }
       if (!filterResult && features[featureId].isShown) {
         filterMask[featureId] = false;
+            /* eslint-disable */
+        if (typeof (leafletLayer._markerCluster) === 'function' ) {
+            /* eslint-enable */
+          leafletLayer.removeLayer(layers[featureId]);
+        }
         layers[featureId].remove();
         features[featureId].isShown = false;
         featureMaskChanges.push({ featureId, mask: false });
       }
     });
+    /* eslint-disable */
+    if ( typeof(leafletLayer._markerCluster) === 'function' ) {
+      /* eslint-enable */
+      leafletLayer.refreshClusters();
+    }
   }
 
   return featureMaskChanges;
