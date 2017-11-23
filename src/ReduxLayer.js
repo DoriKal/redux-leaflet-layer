@@ -332,7 +332,7 @@ export function setFilter(layerId, filterExpression) {
       }
     });
     /* eslint-disable */
-    if ( typeof(leafletLayer._markerCluster) === 'function' ) {
+    if ( typeof(leafletLayer._markerCluster) === 'function' && features.length ) {
       /* eslint-enable */
       leafletLayer.refreshClusters();
     }
