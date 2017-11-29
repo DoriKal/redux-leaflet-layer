@@ -67,14 +67,20 @@ function layerEventsToActions(layer, layerId, featureId) {
 export function createReduxLayer({
   layerId, dispatch, style, markerOptions, globalMarkerOptions,
   getFeatureId, onEachFeature, trackMouseEvents, passingProps,
-  clasterProps,
+  clusterProps,
 }) {
   if (nss[layerId]) {
     throw new Error(`Trying to create redux layer with id=${layerId}, which already exists`);
   }
   let leafletLayer;
-  if (clasterProps && clasterProps.isEnable) {
-    leafletLayer = L.markerClusterGroup();
+  if (clusterProps && clusterProps.isEnable) {
+    if (clusterProps.clusterIcon) {
+      leafletLayer = L.markerClusterGroup({ animate: false,
+        iconCreateFunction: clusterProps.clusterIcon });
+    } else {
+      leafletLayer = L.markerClusterGroup({ animate: false,
+       });
+    }
   } else {
     leafletLayer = L.layerGroup();
   }
