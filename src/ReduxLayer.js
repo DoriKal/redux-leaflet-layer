@@ -239,7 +239,7 @@ export function setFeatureCoords(layerId, featureId, coords) {
       default:
         break;
     }
-    layers[featureId].getLayers(lr => {
+    layers[featureId].getLayers().forEach(lr => {
       lr.setLatLngs(L.GeoJSON.coordsToLatLngs(coords, level));
     });
   }
