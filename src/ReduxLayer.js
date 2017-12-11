@@ -31,7 +31,9 @@ function defaultMarkerOptions(/* feature */) {
 const defaultGlobalMarkerOptions = {};
 
 function defaultGetFeatureId(/* feature */) {
-  return Math.random().toString(36).substring(7);
+  return Math.random()
+    .toString(36)
+    .substring(7);
 }
 
 function defaultOnEachFeature(/* feature, layer */) {
@@ -40,10 +42,18 @@ function defaultOnEachFeature(/* feature, layer */) {
 
 function layerEventsToActions(layer, layerId, featureId) {
   const { dispatch } = nss[layerId];
-  layer.on('mouseover', () => { dispatch(mouseOverFeature(layerId, featureId)); });
-  layer.on('mouseout', () => { dispatch(mouseOutFeature(layerId, featureId)); });
-  layer.on('mousedown', () => { dispatch(mouseDownFeature(layerId, featureId)); });
-  layer.on('mouseup', () => { dispatch(mouseUpFeature(layerId, featureId)); });
+  layer.on('mouseover', () => {
+    dispatch(mouseOverFeature(layerId, featureId));
+  });
+  layer.on('mouseout', () => {
+    dispatch(mouseOutFeature(layerId, featureId));
+  });
+  layer.on('mousedown', () => {
+    dispatch(mouseDownFeature(layerId, featureId));
+  });
+  layer.on('mouseup', () => {
+    dispatch(mouseUpFeature(layerId, featureId));
+  });
 }
 
 /**
@@ -65,8 +75,15 @@ function layerEventsToActions(layer, layerId, featureId) {
  * (feature) => { <must return a Leaflet marker options object> }
  */
 export function createReduxLayer({
-  layerId, dispatch, style, markerOptions, globalMarkerOptions,
-  getFeatureId, onEachFeature, trackMouseEvents, passingProps,
+  layerId,
+  dispatch,
+  style,
+  markerOptions,
+  globalMarkerOptions,
+  getFeatureId,
+  onEachFeature,
+  trackMouseEvents,
+  passingProps,
   clusterProps,
 }) {
   if (nss[layerId]) {
@@ -75,11 +92,14 @@ export function createReduxLayer({
   let leafletLayer;
   if (clusterProps && clusterProps.isEnable) {
     if (clusterProps.clusterIcon) {
-      leafletLayer = L.markerClusterGroup({ animate: false,
-        iconCreateFunction: clusterProps.clusterIcon });
+      leafletLayer = L.markerClusterGroup({
+        animate: false,
+        iconCreateFunction: clusterProps.clusterIcon,
+      });
     } else {
-      leafletLayer = L.markerClusterGroup({ animate: false,
-       });
+      leafletLayer = L.markerClusterGroup({
+        animate: false,
+      });
     }
   } else {
     leafletLayer = L.layerGroup();
@@ -119,9 +139,19 @@ export function addFeatures(layerId, arrayOrFeatureCollection) {
   }
 
   const {
-    layers, markerOptions, globalMarkerOptions, getFeatureId, style,
-    filter, filterMask, leafletLayer, features, onEachFeature, dispatch,
-    trackMouseEvents, passingProps,
+    layers,
+    markerOptions,
+    globalMarkerOptions,
+    getFeatureId,
+    style,
+    filter,
+    filterMask,
+    leafletLayer,
+    features,
+    onEachFeature,
+    dispatch,
+    trackMouseEvents,
+    passingProps,
   } = nss[layerId];
 
   const newFeatures = {};
@@ -189,32 +219,49 @@ export function clearFeatures(layerId) {
 export function setFeatureCoords(layerId, featureId, coords) {
   const { features, layers } = nss[layerId];
   features[featureId].geometry.coordinates = coords;
+
   if (features[featureId].geometry.type === 'Point') {
     layers[featureId].setLatLng(L.GeoJSON.coordsToLatLng(coords));
   } else {
-    layers[featureId].setLatLngs(L.GeoJSON.coordsToLatLngs(coords));
+    let level = 0;
+    switch (features[featureId].geometry.type) {
+      case 'MultiPoint':
+      case 'LineString':
+        level = 0;
+        break;
+      case 'Polygon':
+        level = 1;
+        break;
+      case 'MultiLineString':
+      case 'MultiPolygon':
+        level = 2;
+        break;
+      default:
+        break;
+    }
+    layers[featureId].getLayers(lr => {
+      lr.setLatLngs(L.GeoJSON.coordsToLatLngs(coords, level));
+    });
   }
 }
 
 export function setFeatureParams(layerId, featureId, feature) {
-  const {
-    features, layers, style, markerOptions, filter, leafletLayer,
-  } = nss[layerId];
+  const { features, layers, style, markerOptions, filter, leafletLayer } = nss[layerId];
 
   Object.assign(features[featureId].properties, feature.properties);
-  nss[layerId].passingProps.forEach((passName) => {
+  nss[layerId].passingProps.forEach(passName => {
     if (feature[passName]) {
-      switch (typeof(features[featureId][passName])) {
-        case ('string'):
+      switch (typeof features[featureId][passName]) {
+        case 'string':
           features[featureId][passName] = feature[passName];
           break;
-        case ('number'):
+        case 'number':
           features[featureId][passName] = feature[passName];
           break;
-        case ('array'):
+        case 'array':
           features[featureId][passName] = [].concat(feature[passName]);
           break;
-        case ('undefined'):
+        case 'undefined':
           break;
         default:
           if (features[featureId][passName] === null) {
@@ -262,9 +309,7 @@ export function setFeatureParams(layerId, featureId, feature) {
 }
 
 export function setFeatureProperties(layerId, featureId, properties) {
-  const {
-    features, layers, style, markerOptions, filter, leafletLayer,
-  } = nss[layerId];
+  const { features, layers, style, markerOptions, filter, leafletLayer } = nss[layerId];
   Object.assign(features[featureId].properties, properties);
 
   let maskChange;
@@ -327,9 +372,9 @@ export function setFilter(layerId, filterExpression) {
       }
       if (!filterResult && features[featureId].isShown) {
         filterMask[featureId] = false;
-            /* eslint-disable */
-        if (typeof (leafletLayer._markerCluster) === 'function' ) {
-            /* eslint-enable */
+        /* eslint-disable */
+        if (typeof leafletLayer._markerCluster === 'function') {
+          /* eslint-enable */
           leafletLayer.removeLayer(layers[featureId]);
         }
         layers[featureId].remove();
@@ -338,7 +383,7 @@ export function setFilter(layerId, filterExpression) {
       }
     });
     /* eslint-disable */
-    if ( typeof(leafletLayer._markerCluster) === 'function' && features.length ) {
+    if (typeof leafletLayer._markerCluster === 'function' && features.length) {
       /* eslint-enable */
       leafletLayer.refreshClusters();
     }
