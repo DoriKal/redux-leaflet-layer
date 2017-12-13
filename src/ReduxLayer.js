@@ -229,10 +229,10 @@ export function setFeatureCoords(layerId, featureId, coords) {
       case 'LineString':
         level = 0;
         break;
+      case 'MultiLineString':
       case 'Polygon':
         level = 1;
         break;
-      case 'MultiLineString':
       case 'MultiPolygon':
         level = 2;
         break;
